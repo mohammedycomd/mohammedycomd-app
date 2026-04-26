@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم | إدارة البحوث والدراسات</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <nav class="dashboard-nav">
+        <div class="nav-brand">إدارة البحوث والدراسات في السوق</div>
+        <div class="nav-user">
+            <span>مرحباً، محمد</span>
+            <a href="/logout" class="btn-logout">تسجيل الخروج</a>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <ul class="side-menu">
+                <li class="active"><a href="#">الرئيسية</a></li>
+                <li><a href="nanostation.html">مشروع Nanostation</a></li>
+                <li><a href="#reports">تقارير Platts</a></li>
+                <li><a href="#">إحصائيات السوق</a></li>
+            </ul>
+        </aside>
+
+        <main class="content">
+            <header class="content-header">
+                <h1>لوحة التحكم الرئيسية</h1>
+                <p>مرحباً بك في النظام المركزي لإدارة البحوث والدراسات.</p>
+            </header>
+
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <h3>إجمالي التقارير</h3>
+                    <p id="report-count">جارِ التحميل...</p>
+                </div>
+                <div class="stat-card">
+                    <h3>أحدث نشاط</h3>
+                    <p>رفع تقرير Platts اليوم</p>
+                </div>
+                <div class="stat-card">
+                    <h3>حالة النظام</h3>
+                    <p class="status-online">مستقر</p>
+                </div>
+            </section>
+
+            <section id="reports" class="section-card">
+                <div class="section-header">
+                    <h2>نشرة Platts العالمية</h2>
+                    <button class="btn-primary" onclick="document.getElementById('uploadModal').style.display='block'">رفع تقرير جديد</button>
+                </div>
+                <div class="reports-table-container">
+                    <table class="reports-table">
+                        <thead>
+                            <tr>
+                                <th>اسم التقرير</th>
+                                <th>تاريخ الرفع</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reports-list">
+                            <!-- سيتم تعبئتها بواسطة JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Upload Modal -->
+    <div id="uploadModal" class="modal">
+        <div class="modal-content animate-up">
+            <h3>رفع تقرير Platts جديد</h3>
+            <form action="/upload-report" method="POST" enctype="multipart/form-data">
+                <div class="input-group">
+                    <input type="file" name="report" accept=".pdf,.doc,.docx" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn-primary">رفع الملف</button>
+                    <button type="button" class="btn-secondary" onclick="document.getElementById('uploadModal').style.display='none'">إلغاء</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        async function loadReports() {
+            const response = await fetch('/api/reports');
+            const reports = await response.json();
+            const list = document.getElementById('reports-list');
+            document.getElementById('report-count').innerText = reports.length;
+            
+            list.innerHTML = reports.map(r => `
+                <tr>
+                    <td>${r.name}</td>
+                    <td>${r.date}</td>
+                    <td>
+                        <a href="${r.url}" target="_blank" class="btn-view">تصفح</a>
+                        <a href="${r.url}" download class="btn-download">تحميل</a>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        loadReports();
+    </script>
+</body>
+</html>

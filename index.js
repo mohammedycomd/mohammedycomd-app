@@ -13,14 +13,28 @@ const ADMIN_USER = "admin";
 const ADMIN_PASS = "admin123";
 const JWT_SECRET = "mohammedycomd-jwt-2026-secure";
 
-// Middleware
+// ── FILE UPLOAD SETUP (defined early so routes can use it) ──
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const dir = path.join(__dirname, 'uploads');
+        if (!fs.existsSync(dir)) fs.mkdirSync(dir);
+        cb(null, dir);
+    },
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+});
+const upload = multer({ storage });
+
+// ── MIDDLEWARE ──────────────────────────────────────────
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve static assets (CSS/JS) but NOT HTML pages directly
+app.use('/style.css', express.static(path.join(__dirname, 'public', 'style.css')));
+app.use('/script.js', express.static(path.join(__dirname, 'public', 'script.js')));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Auth middleware using JWT
+// ── AUTH MIDDLEWARE ─────────────────────────────────────
 const isAuthenticated = (req, res, next) => {
     const token = req.cookies.authToken;
     if (!token) return res.redirect('/login.html');
@@ -32,38 +46,46 @@ const isAuthenticated = (req, res, next) => {
     }
 };
 
-// ROUTES
+// ── PUBLIC ROUTES ───────────────────────────────────────
 app.get('/', (req, res) => {
     const token = req.cookies.authToken;
     try {
         if (token) jwt.verify(token, JWT_SECRET);
         else return res.redirect('/login.html');
-        res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
+        return res.redirect('/dashboard.html');
     } catch {
         res.redirect('/login.html');
     }
 });
 
+app.get('/login.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+});
+
+app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
-    console.log(`Login: user="${username}" pass="${password}"`);
+    console.log(`Login attempt: user="${username}"`);
 
     if (username === ADMIN_USER && password === ADMIN_PASS) {
         const token = jwt.sign({ user: username }, JWT_SECRET, { expiresIn: '7d' });
+        // Detect HTTPS properly on Render (uses reverse proxy with X-Forwarded-Proto)
+        const isSecure = req.secure || req.headers['x-forwarded-proto'] === 'https';
         res.cookie('authToken', token, {
             httpOnly: true,
             maxAge: 7 * 24 * 60 * 60 * 1000,
             sameSite: 'lax',
-            secure: process.env.NODE_ENV === 'production'
+            secure: isSecure
         });
-        res.redirect('/dashboard.html');
+        return res.redirect('/dashboard.html');
     } else {
-        res.send(`
-            <html><body style="font-family:Cairo,sans-serif;text-align:center;padding:50px;direction:rtl;">
-                <h2 style="color:red;">❌ بيانات الدخول خاطئة</h2>
-                <p>اسم المستخدم الصحيح: <b>admin</b></p>
-                <p>كلمة المرور الصحيحة: <b>admin123</b></p>
-                <br><a href="/login.html" style="color:blue;">← حاول مرة أخرى</a>
+        return res.send(`
+            <html><body style="font-family:Cairo,sans-serif;text-align:center;padding:50px;direction:rtl;background:#0f172a;color:#fff;">
+                <h2 style="color:#ef4444;">❌ بيانات الدخول خاطئة</h2>
+                <br><a href="/login.html" style="color:#c5a059;">← حاول مرة أخرى</a>
             </body></html>
         `);
     }
@@ -74,27 +96,17 @@ app.get('/logout', (req, res) => {
     res.redirect('/login.html');
 });
 
-app.get('/nanostation.html', isAuthenticated, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'nanostation.html'));
-});
-
+// ── PROTECTED ROUTES ────────────────────────────────────
 app.get('/dashboard.html', isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-// File upload
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        const dir = path.join(__dirname, 'uploads');
-        if (!fs.existsSync(dir)) fs.mkdirSync(dir);
-        cb(null, dir);
-    },
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+app.get('/nanostation.html', isAuthenticated, (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'nanostation.html'));
 });
-const upload = multer({ storage });
 
 app.post('/upload-report', isAuthenticated, upload.single('report'), (req, res) => {
-    res.redirect('/');
+    res.redirect('/dashboard.html');
 });
 
 app.get('/api/reports', isAuthenticated, (req, res) => {
@@ -114,4 +126,4 @@ app.get('/api/reports', isAuthenticated, (req, res) => {
     });
 });
 
-app.listen(PORT, () => console.log(`Server on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

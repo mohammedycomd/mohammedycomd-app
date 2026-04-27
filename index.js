@@ -56,7 +56,7 @@ app.post('/login', (req, res) => {
             sameSite: 'lax',
             secure: process.env.NODE_ENV === 'production'
         });
-        res.redirect('/');
+        res.redirect('/dashboard.html');
     } else {
         res.send(`
             <html><body style="font-family:Cairo,sans-serif;text-align:center;padding:50px;direction:rtl;">

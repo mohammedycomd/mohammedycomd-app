@@ -48,14 +48,16 @@ const isAuthenticated = (req, res, next) => {
 
 // ── PUBLIC ROUTES ───────────────────────────────────────
 app.get('/', (req, res) => {
+    // If already logged in → go to dashboard directly
     const token = req.cookies.authToken;
-    try {
-        if (token) jwt.verify(token, JWT_SECRET);
-        else return res.redirect('/login.html');
-        return res.redirect('/dashboard.html');
-    } catch {
-        res.redirect('/login.html');
+    if (token) {
+        try {
+            jwt.verify(token, JWT_SECRET);
+            return res.redirect('/dashboard.html');
+        } catch {}
     }
+    // Otherwise → show the beautiful landing page
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/login.html', (req, res) => {

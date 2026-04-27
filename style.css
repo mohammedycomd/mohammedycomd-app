@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&family=Playfair+Display:wght@700&display=swap');
+
+:root {
+    --primary-dark: #0f172a;
+    --primary-light: #1e293b;
+    --accent: #c5a059; /* Elegant Gold */
+    --accent-hover: #e5c07b;
+    --bg-soft: #f8fafc;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --white: #ffffff;
+    --glass: rgba(255, 255, 255, 0.95);
+    --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Cairo', sans-serif;
+    background-color: var(--bg-soft);
+    color: var(--text-main);
+    overflow-x: hidden;
+}
+
+/* Luxury Login Page */
+.login-page {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #1e293b 100%);
+    position: relative;
+}
+
+.login-page::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
+    opacity: 0.1;
+}
+
+.login-box {
+    background: var(--white);
+    padding: 4rem 3rem;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    width: 100%;
+    max-width: 480px;
+    text-align: center;
+    position: relative;
+    border-top: 5px solid var(--accent);
+}
+
+.login-header h2 {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 800;
+    color: var(--primary-dark);
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.login-header p {
+    color: var(--text-muted);
+    margin-bottom: 2.5rem;
+}
+
+/* Dashboard Layout */
+.dashboard-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--primary-dark);
+    color: var(--white);
+    padding: 1rem 4%;
+    box-shadow: var(--shadow);
+    border-bottom: 2px solid var(--accent);
+}
+
+.nav-brand {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 1.3rem;
+    letter-spacing: 0.5px;
+}
+
+.btn-logout {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: 0.3s;
+}
+
+.btn-logout:hover {
+    background: #ef4444;
+    color: white;
+}
+
+.dashboard-container {
+    display: flex;
+    min-height: calc(100vh - 70px);
+}
+
+.sidebar {
+    width: 280px;
+    background: var(--white);
+    border-left: 1px solid var(--border);
+    padding: 2.5rem 0;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.02);
+}
+
+.side-menu li a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 1.2rem 2.5rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+.side-menu li.active a, .side-menu li a:hover {
+    background: rgba(197, 160, 89, 0.05);
+    color: var(--accent);
+    border-right: 5px solid var(--accent);
+}
+
+.content {
+    flex: 1;
+    padding: 3rem 4%;
+}
+
+.content-header {
+    margin-bottom: 3rem;
+}
+
+.content-header h1 {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+    margin-bottom: 0.5rem;
+}
+
+/* Statistics Visuals */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.stat-card {
+    background: var(--white);
+    padding: 2rem;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    border: 1px solid rgba(0,0,0,0.03);
+    transition: 0.3s;
+}
+
+.stat-card:hover { transform: translateY(-5px); }
+
+.stat-card h3 {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+}
+
+/* Professional Table */
+.section-card {
+    background: var(--white);
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: var(--shadow);
+}
+
+.reports-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 10px;
+}
+
+.reports-table th {
+    background: #f1f5f9;
+    padding: 1.2rem;
+    text-align: right;
+    font-weight: 700;
+    color: var(--primary-dark);
+    border-radius: 8px;
+}
+
+.reports-table tr td {
+    padding: 1.5rem 1.2rem;
+    background: #fdfdfd;
+    border-top: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.reports-table tr td:first-child { border-right: 1px solid #f1f5f9; border-radius: 0 12px 12px 0; }
+.reports-table tr td:last-child { border-left: 1px solid #f1f5f9; border-radius: 12px 0 0 12px; }
+
+.btn-primary {
+    background: var(--accent);
+    color: var(--primary-dark);
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 10px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.btn-primary:hover { background: var(--accent-hover); box-shadow: 0 5px 15px rgba(197, 160, 89, 0.3); }
+
+/* Animations */
+@keyframes slideInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-up { animation: slideInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }

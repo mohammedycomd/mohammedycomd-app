@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول | إدارة البحوث والدراسات</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <div class="login-box animate-up">
+            <div class="login-header">
+                <i class="fas fa-user-shield fa-3x" style="color: var(--accent); margin-bottom: 1.5rem;"></i>
+                <h2>نظام الدخول الموحد</h2>
+                <p>إدارة البحوث والدراسات في السوق</p>
+            </div>
+            <form action="/login" method="POST">
+                <div class="input-group">
+                    <label for="username"><i class="fas fa-user"></i> اسم المستخدم</label>
+                    <input type="text" id="username" name="username" required placeholder="أدخل اسم المستخدم">
+                </div>
+                <div class="input-group">
+                    <label for="password"><i class="fas fa-key"></i> كلمة المرور</label>
+                    <input type="password" id="password" name="password" required placeholder="أدخل كلمة المرور">
+                </div>
+                <button type="submit" class="btn-primary">
+                    دخول آمن <i class="fas fa-arrow-left" style="margin-right: 10px;"></i>
+                </button>
+            </form>
+            <div class="login-footer">
+                <p><i class="fas fa-lock"></i> نظام محمي بتشفير 256-بت</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

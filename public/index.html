@@ -3,86 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MohammedYcomd | سيرفر احترافي</title>
+    <title>إدارة البحوث والدراسات في السوق | الصفحة الرئيسية</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body>
-    <div class="background-glow"></div>
-    
-    <nav>
-        <div class="logo">MohammedYcomd</div>
-        <div class="nav-links">
-            <a href="#home">الرئيسية</a>
-            <a href="#services">الخدمات</a>
-            <a href="#status">حالة السيرفر</a>
-            <a href="#contact" class="btn-primary">تواصل معي</a>
+<body class="home-revamp">
+    <div class="overlay"></div>
+    <div class="hero-section animate-up">
+        <div class="main-logo-container">
+            <i class="fas fa-landmark fa-4x" style="color: var(--accent); margin-bottom: 2rem;"></i>
         </div>
-    </nav>
+        <h1 class="main-title">إدارة البحوث والدراسات في السوق</h1>
+        <p class="main-subtitle">المنصة المركزية للتحليل الاستراتيجي ونشر التقارير العالمية</p>
+        
+        <div class="divider"></div>
+        
+        <div class="entrance-container">
+            <p>بوابة الدخول الآمن للموظفين والباحثين</p>
+            <a href="/login.html" class="btn-premium">
+                <i class="fas fa-lock-open"></i> الدخول إلى النظام
+            </a>
+        </div>
+        
+        <div class="features-preview">
+            <div class="f-item"><i class="fas fa-check-circle"></i> تقارير Platts</div>
+            <div class="f-item"><i class="fas fa-check-circle"></i> تحليل البيانات</div>
+            <div class="f-item"><i class="fas fa-check-circle"></i> أمان عالٍ</div>
+        </div>
+    </div>
 
-    <main id="home">
-        <section class="hero">
-            <div class="hero-content">
-                <h1 class="animate-up">مرحباً بك في عالم <span class="gradient-text">MohammedYcomd</span></h1>
-                <p class="animate-up delay-1">سيرفر احترافي مدعوم بتقنية Node.js، مصمم للسرعة، الأداء، والأناقة.</p>
-                <div class="cta-group animate-up delay-2">
-                    <a href="#status" class="btn-primary">ابدأ الآن</a>
-                    <a href="nanostation.html" class="btn-secondary">مشروع Nanostation</a>
-                </div>
-            </div>
-            <div class="hero-visual animate-up delay-3">
-                <div class="server-card">
-                    <div class="card-header">
-                        <span class="dot red"></span>
-                        <span class="dot yellow"></span>
-                        <span class="dot green"></span>
-                        <span class="title">System Monitor</span>
-                    </div>
-                    <div class="card-body">
-                        <div class="stat-row">
-                            <span>حالة السيرفر:</span>
-                            <span class="status-online">متصل (Online)</span>
-                        </div>
-                        <div class="stat-row">
-                            <span>اسم النطاق:</span>
-                            <span class="domain-highlight">mohammedycomd.vercel.app</span>
-                        </div>
-                        <div class="progress-container">
-                            <label>استهلاك الموارد:</label>
-                            <div class="progress-bar">
-                                <div class="progress-fill" style="width: 32%;"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="services" class="features">
-            <div class="feature-card">
-                <div class="icon">🚀</div>
-                <h3>سرعة فائقة</h3>
-                <p>استجابة فورية بفضل محرك V8 الخاص بـ Node.js.</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon">🛡️</div>
-                <h3>أمان عالي</h3>
-                <p>تشفير وحماية البيانات بأحدث المعايير العالمية.</p>
-            </div>
-            <div class="feature-card">
-                <div class="icon">🌐</div>
-                <h3>رابط عالمي</h3>
-                <p>اسمك الخاص متاح الآن للعالم أجمع.</p>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <p>&copy; 2026 جميع الحقوق محفوظة لـ MohammedYcomd</p>
-    </footer>
-
-    <script src="script.js"></script>
+    <style>
+        .home-revamp {
+            height: 100vh;
+            background: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80') center/cover no-repeat;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+        }
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.8) 100%);
+        }
+        .hero-section {
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+            padding: 2rem;
+        }
+        .main-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: var(--white);
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .main-subtitle {
+            font-size: 1.4rem;
+            color: var(--accent);
+            letter-spacing: 1px;
+            margin-bottom: 2rem;
+        }
+        .divider {
+            width: 100px;
+            height: 4px;
+            background: var(--accent);
+            margin: 2rem auto;
+            border-radius: 2px;
+        }
+        .btn-premium {
+            display: inline-block;
+            margin-top: 1.5rem;
+            background: var(--accent);
+            color: var(--primary-dark);
+            padding: 1.2rem 3rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-size: 1.3rem;
+            font-weight: 800;
+            transition: 0.4s;
+            box-shadow: 0 10px 20px rgba(197, 160, 89, 0.3);
+        }
+        .btn-premium:hover {
+            transform: scale(1.05);
+            background: var(--accent-hover);
+            box-shadow: 0 15px 30px rgba(197, 160, 89, 0.5);
+        }
+        .features-preview {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 4rem;
+            color: var(--white);
+            font-weight: 600;
+        }
+        .f-item i {
+            color: var(--accent);
+            margin-left: 8px;
+        }
+    </style>
 </body>
 </html>

@@ -103,10 +103,6 @@ app.get('/dashboard.html', isAuthenticated, (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'dashboard.html'));
 });
 
-app.get('/nanostation.html', isAuthenticated, (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'nanostation.html'));
-});
-
 app.post('/upload-report', isAuthenticated, upload.single('report'), (req, res) => {
     res.redirect('/dashboard.html');
 });

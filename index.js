@@ -95,7 +95,7 @@ app.post('/login', (req, res) => {
 
 app.get('/logout', (req, res) => {
     res.clearCookie('authToken');
-    res.redirect('/login.html');
+    res.redirect('/');
 });
 
 // ── PROTECTED ROUTES ────────────────────────────────────

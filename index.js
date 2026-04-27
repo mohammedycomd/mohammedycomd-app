@@ -53,7 +53,8 @@ app.post('/login', (req, res) => {
         res.cookie('authToken', token, {
             httpOnly: true,
             maxAge: 7 * 24 * 60 * 60 * 1000,
-            sameSite: 'lax'
+            sameSite: 'lax',
+            secure: process.env.NODE_ENV === 'production'
         });
         res.redirect('/');
     } else {

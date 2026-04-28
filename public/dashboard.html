@@ -85,22 +85,51 @@
 
     <!-- Upload Modal -->
     <div id="uploadModal" class="modal">
-        <div class="modal-content animate-up">
-            <h3>إضافة دراسة جديدة للنظام</h3>
-            <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">يرجى اختيار ملف PDF أو مستودع بيانات.</p>
-            <form id="uploadForm" action="/upload-report" method="POST" enctype="multipart/form-data">
-                <div class="input-group" style="border: 2px dashed var(--accent); padding: 2rem; text-align: center; border-radius: 10px;">
-                    <input type="file" name="report" accept=".pdf,.doc,.docx" required id="fileInput" style="display: none;">
-                    <label for="fileInput" style="cursor: pointer;">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--accent);"></i>
-                        <p style="margin-top: 10px;" id="fileLabel">اضغط هنا لاختيار الملف</p>
+        <div class="modal-content animate-up" style="max-width:600px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                <h3>رفع ملفات جديدة إلى النظام</h3>
+                <button onclick="document.getElementById('uploadModal').style.display='none'" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#94a3b8;">✕</button>
+            </div>
+            <p style="margin-bottom:1.5rem;font-size:0.9rem;color:var(--text-muted);">يمكنك اختيار أكثر من ملف أو رفع مجلد بالكامل.</p>
+
+            <!-- Drop Zone -->
+            <div id="dropZone" style="border:2px dashed var(--accent);padding:2.5rem;text-align:center;border-radius:14px;background:#fafaf8;transition:0.3s;cursor:pointer;">
+                <i class="fas fa-cloud-upload-alt" style="font-size:3rem;color:var(--accent);display:block;margin-bottom:1rem;"></i>
+                <p style="font-weight:700;font-size:1rem;color:#1e293b;margin-bottom:0.5rem;">اسحب وأفلت الملفات هنا</p>
+                <p style="font-size:0.85rem;color:#94a3b8;margin-bottom:1.2rem;">أو اختر من جهازك</p>
+                <div style="display:flex;gap:0.8rem;justify-content:center;flex-wrap:wrap;">
+                    <label for="fileInput" class="btn-primary" style="cursor:pointer;padding:0.7rem 1.4rem;font-size:0.9rem;">
+                        <i class="fas fa-files"></i> اختيار ملفات
+                    </label>
+                    <label for="folderInput" class="btn-primary" style="cursor:pointer;padding:0.7rem 1.4rem;font-size:0.9rem;background:linear-gradient(135deg,#1e293b,#334155);color:#fff;">
+                        <i class="fas fa-folder-open"></i> رفع مجلد
                     </label>
                 </div>
-                <div class="modal-actions">
-                    <button type="submit" class="btn-primary" style="flex: 2;">بدء الرفع الآمن</button>
-                    <button type="button" class="btn-secondary" style="flex: 1;" onclick="document.getElementById('uploadModal').style.display='none'">إلغاء</button>
+                <input type="file" id="fileInput" multiple accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.zip" style="display:none;">
+                <input type="file" id="folderInput" webkitdirectory multiple style="display:none;">
+            </div>
+
+            <!-- Selected Files Preview -->
+            <div id="filesPreview" style="display:none;margin-top:1.2rem;max-height:220px;overflow-y:auto;"></div>
+
+            <!-- Progress Bar -->
+            <div id="uploadProgress" style="display:none;margin-top:1.2rem;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:6px;font-size:0.85rem;font-weight:700;">
+                    <span>جارٍ الرفع...</span>
+                    <span id="progressText">0%</span>
                 </div>
-            </form>
+                <div style="background:#e2e8f0;border-radius:50px;height:10px;overflow:hidden;">
+                    <div id="progressBar" style="height:100%;background:linear-gradient(90deg,var(--accent),#e5c07b);border-radius:50px;width:0%;transition:width 0.3s;"></div>
+                </div>
+                <p id="uploadStatus" style="font-size:0.82rem;color:#64748b;margin-top:6px;text-align:center;"></p>
+            </div>
+
+            <div class="modal-actions" style="margin-top:1.2rem;">
+                <button id="startUploadBtn" class="btn-primary" style="flex:2;" onclick="startMultiUpload()" disabled>
+                    <i class="fas fa-upload"></i> بدء الرفع الآمن
+                </button>
+                <button type="button" class="btn-secondary" style="flex:1;" onclick="closeUploadModal()">إلغاء</button>
+            </div>
         </div>
     </div>
 
@@ -276,10 +305,143 @@
     <script>
         // ============================================================
         // DATA PERSISTENCE LAYER - localStorage based
-        // All report data is saved locally and survives page refreshes
         // ============================================================
         const STORAGE_KEY = 'ycomd_reports_data';
         const UPLOAD_TIME_KEY = 'ycomd_last_upload';
+
+        // ---- Multi-file upload state ----
+        let selectedFiles = [];
+
+        function collectFiles(fileList) {
+            const arr = Array.from(fileList);
+            // Merge avoiding duplicates by name+size
+            arr.forEach(f => {
+                const exists = selectedFiles.find(x => x.name === f.name && x.size === f.size);
+                if (!exists) selectedFiles.push(f);
+            });
+            renderFilesPreview();
+        }
+
+        function renderFilesPreview() {
+            const preview = document.getElementById('filesPreview');
+            const btn = document.getElementById('startUploadBtn');
+            if (selectedFiles.length === 0) {
+                preview.style.display = 'none';
+                btn.disabled = true;
+                return;
+            }
+            btn.disabled = false;
+            preview.style.display = 'block';
+            const icons = { pdf:'fa-file-pdf', doc:'fa-file-word', docx:'fa-file-word', xls:'fa-file-excel', xlsx:'fa-file-excel', ppt:'fa-file-powerpoint', pptx:'fa-file-powerpoint', zip:'fa-file-archive', txt:'fa-file-alt' };
+            const getIcon = name => { const ext = name.split('.').pop().toLowerCase(); return icons[ext] || 'fa-file'; };
+            const fmtSize = b => b > 1048576 ? (b/1048576).toFixed(1)+' MB' : (b/1024).toFixed(0)+' KB';
+            preview.innerHTML = `
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:0.8rem;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;">
+                        <span style="font-size:0.85rem;font-weight:700;color:#1e293b;"><i class="fas fa-check-circle" style="color:var(--accent);"></i> ${selectedFiles.length} ملف محدد</span>
+                        <button onclick="clearFiles()" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:0.8rem;font-weight:700;">مسح الكل ✕</button>
+                    </div>
+                    ${selectedFiles.map((f,i) => `
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.4rem;border-bottom:1px solid #f1f5f9;">
+                            <div style="display:flex;align-items:center;gap:8px;min-width:0;">
+                                <i class="fas ${getIcon(f.name)}" style="color:#ef4444;flex-shrink:0;"></i>
+                                <span style="font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px;">${f.name}</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
+                                <span style="font-size:0.78rem;color:#94a3b8;">${fmtSize(f.size)}</span>
+                                <button onclick="removeFile(${i})" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:0.85rem;">✕</button>
+                            </div>
+                        </div>`).join('')}
+                </div>`;
+        }
+
+        function removeFile(idx) {
+            selectedFiles.splice(idx, 1);
+            renderFilesPreview();
+        }
+
+        function clearFiles() {
+            selectedFiles = [];
+            document.getElementById('fileInput').value = '';
+            document.getElementById('folderInput').value = '';
+            renderFilesPreview();
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').style.display = 'none';
+            clearFiles();
+            document.getElementById('uploadProgress').style.display = 'none';
+        }
+
+        // File input listeners
+        document.getElementById('fileInput').addEventListener('change', function() { collectFiles(this.files); });
+        document.getElementById('folderInput').addEventListener('change', function() { collectFiles(this.files); });
+
+        // Drag & Drop
+        const dropZone = document.getElementById('dropZone');
+        dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.background='rgba(197,160,89,0.08)'; dropZone.style.borderColor='var(--accent)'; });
+        dropZone.addEventListener('dragleave', () => { dropZone.style.background='#fafaf8'; });
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.style.background = '#fafaf8';
+            collectFiles(e.dataTransfer.files);
+        });
+
+        async function startMultiUpload() {
+            if (selectedFiles.length === 0) return;
+            const progressWrap = document.getElementById('uploadProgress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const statusEl = document.getElementById('uploadStatus');
+            const btn = document.getElementById('startUploadBtn');
+
+            progressWrap.style.display = 'block';
+            btn.disabled = true;
+
+            const total = selectedFiles.length;
+            let done = 0;
+            const results = { ok: [], fail: [] };
+
+            for (const file of selectedFiles) {
+                statusEl.textContent = `جارٍ رفع: ${file.name}`;
+                const fd = new FormData();
+                fd.append('reports', file);
+                try {
+                    const resp = await fetch('/upload-report', {
+                        method: 'POST',
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        body: fd
+                    });
+                    if (resp.ok) { results.ok.push(file.name); }
+                    else { results.fail.push(file.name); }
+                } catch { results.fail.push(file.name); }
+
+                done++;
+                const pct = Math.round((done / total) * 100);
+                progressBar.style.width = pct + '%';
+                progressText.textContent = pct + '%';
+            }
+
+            // Also save to localStorage as backup
+            const stored = loadReportsFromStorage();
+            selectedFiles.forEach(f => {
+                const url = URL.createObjectURL(f);
+                const exists = stored.findIndex(r => r.name === f.name);
+                const entry = { name: f.name, date: formatDateTime(), url, size: f.size };
+                if (exists >= 0) stored[exists] = entry; else stored.push(entry);
+            });
+            saveReportsToStorage(stored);
+
+            statusEl.textContent = results.fail.length === 0
+                ? `✅ تم رفع ${results.ok.length} ملف بنجاح`
+                : `⚠️ نجح: ${results.ok.length} | فشل: ${results.fail.length}`;
+
+            setTimeout(() => {
+                closeUploadModal();
+                loadReports();
+                showToast(`✔ تم رفع ${results.ok.length} ملف بنجاح`);
+            }, 1500);
+        }
 
         function saveReportsToStorage(reports) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));

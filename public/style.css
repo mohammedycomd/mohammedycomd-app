@@ -11,6 +11,7 @@
     --white: #ffffff;
     --glass: rgba(255, 255, 255, 0.95);
     --shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+    --border: #e2e8f0;
 }
 
 * {
@@ -26,50 +27,9 @@ body {
     overflow-x: hidden;
 }
 
-/* Luxury Login Page */
-.login-page {
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, var(--primary-dark) 0%, #1e293b 100%);
-    position: relative;
-}
-
-.login-page::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');
-    opacity: 0.1;
-}
-
-.login-box {
-    background: var(--white);
-    padding: 4rem 3rem;
-    border-radius: 20px;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    width: 100%;
-    max-width: 480px;
-    text-align: center;
-    position: relative;
-    border-top: 5px solid var(--accent);
-}
-
-.login-header h2 {
-    font-family: 'Cairo', sans-serif;
-    font-weight: 800;
-    color: var(--primary-dark);
-    font-size: 1.8rem;
-    margin-bottom: 0.5rem;
-}
-
-.login-header p {
-    color: var(--text-muted);
-    margin-bottom: 2.5rem;
-}
-
-/* Dashboard Layout */
+/* ===========================
+   DASHBOARD NAVIGATION
+=========================== */
 .dashboard-nav {
     display: flex;
     justify-content: space-between;
@@ -79,13 +39,25 @@ body {
     padding: 1rem 4%;
     box-shadow: var(--shadow);
     border-bottom: 2px solid var(--accent);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .nav-brand {
     font-family: 'Cairo', sans-serif;
     font-weight: 700;
-    font-size: 1.3rem;
+    font-size: 1.15rem;
     letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
 }
 
 .btn-logout {
@@ -96,6 +68,8 @@ body {
     text-decoration: none;
     font-weight: 700;
     transition: 0.3s;
+    border: 1px solid rgba(239,68,68,0.2);
+    font-size: 0.9rem;
 }
 
 .btn-logout:hover {
@@ -103,75 +77,107 @@ body {
     color: white;
 }
 
+/* ===========================
+   DASHBOARD LAYOUT
+=========================== */
 .dashboard-container {
     display: flex;
     min-height: calc(100vh - 70px);
 }
 
 .sidebar {
-    width: 280px;
+    width: 260px;
     background: var(--white);
     border-left: 1px solid var(--border);
-    padding: 2.5rem 0;
+    padding: 2rem 0;
     box-shadow: 5px 0 15px rgba(0,0,0,0.02);
+    flex-shrink: 0;
+}
+
+.side-menu {
+    list-style: none;
+    padding: 0;
 }
 
 .side-menu li a {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 1.2rem 2.5rem;
+    padding: 1.1rem 2rem;
     color: var(--text-muted);
     text-decoration: none;
     font-weight: 600;
+    font-size: 0.95rem;
     transition: 0.3s;
+    border-right: 4px solid transparent;
 }
 
-.side-menu li.active a, .side-menu li a:hover {
-    background: rgba(197, 160, 89, 0.05);
+.side-menu li.active a,
+.side-menu li a:hover {
+    background: rgba(197, 160, 89, 0.07);
     color: var(--accent);
-    border-right: 5px solid var(--accent);
+    border-right-color: var(--accent);
+}
+
+.side-menu li a i {
+    width: 20px;
+    text-align: center;
 }
 
 .content {
     flex: 1;
-    padding: 3rem 4%;
+    padding: 2.5rem 4%;
+    min-width: 0;
 }
 
+/* ===========================
+   CONTENT HEADER
+=========================== */
 .content-header {
-    margin-bottom: 3rem;
+    margin-bottom: 2.5rem;
 }
 
 .content-header h1 {
-    font-size: 2.2rem;
+    font-size: 2rem;
     font-weight: 800;
     color: var(--primary-dark);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.4rem;
 }
 
-/* Statistics Visuals */
+.content-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+/* ===========================
+   STATISTICS GRID
+=========================== */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-    margin-bottom: 3rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
 }
 
 .stat-card {
     background: var(--white);
     padding: 2rem;
-    border-radius: 15px;
+    border-radius: 16px;
     box-shadow: var(--shadow);
-    border: 1px solid rgba(0,0,0,0.03);
+    border: 1px solid var(--border);
     transition: 0.3s;
 }
 
-.stat-card:hover { transform: translateY(-5px); }
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -8px rgba(0,0,0,0.12);
+}
 
 .stat-card h3 {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--text-muted);
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
+    font-weight: 600;
 }
 
 .stat-value {
@@ -180,56 +186,129 @@ body {
     color: var(--primary-dark);
 }
 
-/* Professional Table */
+/* ===========================
+   SECTION CARD
+=========================== */
 .section-card {
     background: var(--white);
     border-radius: 20px;
-    padding: 2.5rem;
+    padding: 2rem;
     box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+}
+
+/* ===========================
+   REPORTS TABLE
+=========================== */
+.reports-table-container {
+    overflow-x: auto;
 }
 
 .reports-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0 10px;
+    border-collapse: collapse;
 }
 
-.reports-table th {
-    background: #f1f5f9;
-    padding: 1.2rem;
+.reports-table thead th {
+    background: #f8fafc;
+    padding: 1rem 1.2rem;
     text-align: right;
     font-weight: 700;
     color: var(--primary-dark);
-    border-radius: 8px;
+    font-size: 0.9rem;
+    border-bottom: 2px solid var(--border);
 }
 
-.reports-table tr td {
-    padding: 1.5rem 1.2rem;
-    background: #fdfdfd;
-    border-top: 1px solid #f1f5f9;
-    border-bottom: 1px solid #f1f5f9;
+.reports-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
 }
 
-.reports-table tr td:first-child { border-right: 1px solid #f1f5f9; border-radius: 0 12px 12px 0; }
-.reports-table tr td:last-child { border-left: 1px solid #f1f5f9; border-radius: 12px 0 0 12px; }
+.reports-table tbody tr:hover {
+    background: rgba(197,160,89,0.04);
+}
 
+.reports-table tbody td {
+    padding: 1.2rem;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    vertical-align: middle;
+}
+
+/* ===========================
+   BUTTONS
+=========================== */
 .btn-primary {
-    background: var(--accent);
+    background: linear-gradient(135deg, var(--accent), #d4a843);
     color: var(--primary-dark);
-    padding: 1rem 2rem;
+    padding: 0.85rem 1.8rem;
     border: none;
     border-radius: 10px;
     font-weight: 800;
+    font-family: 'Cairo', sans-serif;
     cursor: pointer;
     transition: 0.3s;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
 }
 
-.btn-primary:hover { background: var(--accent-hover); box-shadow: 0 5px 15px rgba(197, 160, 89, 0.3); }
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--accent-hover), var(--accent));
+    box-shadow: 0 8px 20px rgba(197, 160, 89, 0.35);
+    transform: translateY(-1px);
+}
 
-/* Animations */
+/* ===========================
+   INPUT GROUPS
+=========================== */
+.input-group {
+    margin-bottom: 1.2rem;
+}
+
+.input-group label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.9rem 1.2rem;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.95rem;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: #f8fafc;
+    color: var(--text-main);
+    transition: 0.3s;
+    outline: none;
+}
+
+.input-group input:focus {
+    border-color: var(--accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(197,160,89,0.12);
+}
+
+/* ===========================
+   ANIMATIONS
+=========================== */
 @keyframes slideInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.animate-up { animation: slideInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-up {
+    animation: slideInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

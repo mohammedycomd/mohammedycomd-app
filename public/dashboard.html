@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة التحكم | إدارة البحوث والدراسات</title>
+    <title>لوحة التحكم | إدارة البحوث والدراسات - YCOMD</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -12,6 +12,7 @@
         <div class="nav-brand">
             <i class="fas fa-chart-line" style="color: var(--accent); margin-left: 10px;"></i>
             إدارة البحوث والدراسات في السوق
+            <span class="ycomd-badge">YCOMD</span>
         </div>
         <div class="nav-user">
             <span style="margin-left: 15px;">المسؤول: <strong>محمد</strong></span>
@@ -23,7 +24,6 @@
         <aside class="sidebar">
             <ul class="side-menu">
                 <li class="active"><a href="#"><i class="fas fa-home"></i> نظرة عامة</a></li>
-
                 <li><a href="#reports"><i class="fas fa-file-pdf"></i> تقارير Platts</a></li>
                 <li><a href="#"><i class="fas fa-database"></i> قاعدة بيانات السوق</a></li>
                 <li><a href="#"><i class="fas fa-cog"></i> إعدادات النظام</a></li>
@@ -45,7 +45,7 @@
                 <div class="stat-card">
                     <i class="fas fa-clock" style="color: var(--accent); font-size: 1.5rem; margin-bottom: 1rem;"></i>
                     <h3>آخر تحديث للبيانات</h3>
-                    <div class="stat-value" style="font-size: 1.2rem;">نشط الآن</div>
+                    <div class="stat-value" style="font-size: 1.2rem;" id="last-update">نشط الآن</div>
                 </div>
                 <div class="stat-card">
                     <i class="fas fa-shield-alt" style="color: var(--accent); font-size: 1.5rem; margin-bottom: 1rem;"></i>
@@ -88,12 +88,12 @@
         <div class="modal-content animate-up">
             <h3>إضافة دراسة جديدة للنظام</h3>
             <p style="margin-bottom: 1.5rem; font-size: 0.9rem; color: var(--text-muted);">يرجى اختيار ملف PDF أو مستودع بيانات.</p>
-            <form action="/upload-report" method="POST" enctype="multipart/form-data">
+            <form id="uploadForm" action="/upload-report" method="POST" enctype="multipart/form-data">
                 <div class="input-group" style="border: 2px dashed var(--accent); padding: 2rem; text-align: center; border-radius: 10px;">
                     <input type="file" name="report" accept=".pdf,.doc,.docx" required id="fileInput" style="display: none;">
                     <label for="fileInput" style="cursor: pointer;">
                         <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--accent);"></i>
-                        <p style="margin-top: 10px;">اضغط هنا لاختيار الملف</p>
+                        <p style="margin-top: 10px;" id="fileLabel">اضغط هنا لاختيار الملف</p>
                     </label>
                 </div>
                 <div class="modal-actions">
@@ -104,29 +104,359 @@
         </div>
     </div>
 
+    <style>
+        /* YCOMD Badge */
+        .ycomd-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--accent), #e5c07b);
+            color: #0f172a;
+            font-size: 0.7rem;
+            font-weight: 800;
+            padding: 3px 10px;
+            border-radius: 20px;
+            margin-right: 12px;
+            letter-spacing: 1.5px;
+            vertical-align: middle;
+            box-shadow: 0 2px 8px rgba(197,160,89,0.4);
+        }
+
+        /* Section Header */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        /* Action buttons in table */
+        .btn-view {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(197,160,89,0.1);
+            color: var(--accent);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-left: 8px;
+            transition: 0.3s;
+            border: 1px solid rgba(197,160,89,0.3);
+        }
+
+        .btn-view:hover { background: var(--accent); color: #0f172a; }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(16,185,129,0.1);
+            color: #059669;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 700;
+            transition: 0.3s;
+            border: 1px solid rgba(16,185,129,0.3);
+        }
+
+        .btn-download:hover { background: #059669; color: white; }
+
+        .btn-delete {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(239,68,68,0.1);
+            color: #dc2626;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            transition: 0.3s;
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+
+        .btn-delete:hover { background: #dc2626; color: white; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal[style*="block"] { display: flex !important; }
+
+        .modal-content {
+            background: #fff;
+            padding: 2.5rem;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .modal-content h3 {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+            margin-bottom: 0.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #64748b;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            font-family: 'Cairo', sans-serif;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .btn-secondary:hover { background: #e2e8f0; }
+
+        .reports-table-container { overflow-x: auto; }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #94a3b8;
+        }
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+            color: #cbd5e1;
+        }
+
+        /* Save notification toast */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: #0f172a;
+            color: #fff;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            transition: transform 0.4s cubic-bezier(0.16,1,0.3,1);
+            z-index: 99999;
+        }
+        .toast.show { transform: translateX(-50%) translateY(0); }
+        .toast i { color: var(--accent); }
+    </style>
+
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMsg">تم حفظ البيانات بنجاح</span>
+    </div>
+
     <script>
-        async function loadReports() {
-            const response = await fetch('/api/reports');
-            const reports = await response.json();
+        // ============================================================
+        // DATA PERSISTENCE LAYER - localStorage based
+        // All report data is saved locally and survives page refreshes
+        // ============================================================
+        const STORAGE_KEY = 'ycomd_reports_data';
+        const UPLOAD_TIME_KEY = 'ycomd_last_upload';
+
+        function saveReportsToStorage(reports) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
+            localStorage.setItem(UPLOAD_TIME_KEY, new Date().toLocaleString('ar-EG'));
+        }
+
+        function loadReportsFromStorage() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? JSON.parse(raw) : [];
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function formatDateTime() {
+            return new Date().toLocaleString('ar-EG', {
+                year: 'numeric', month: 'long', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+        }
+
+        // ---- Render Reports Table ----
+        function renderReports(reports) {
             const list = document.getElementById('reports-list');
-            document.getElementById('report-count').innerText = reports.length;
-            
-            if(reports.length === 0) {
-                list.innerHTML = '<tr><td colspan="3" style="text-align:center; padding: 3rem; color: #94a3b8;">لا توجد تقارير مرفوعة حالياً</td></tr>';
+            const countEl = document.getElementById('report-count');
+            const lastUpdateEl = document.getElementById('last-update');
+
+            countEl.innerText = reports.length;
+
+            const savedTime = localStorage.getItem(UPLOAD_TIME_KEY);
+            if (savedTime) lastUpdateEl.innerText = savedTime;
+
+            if (reports.length === 0) {
+                list.innerHTML = `
+                    <tr>
+                        <td colspan="3">
+                            <div class="empty-state">
+                                <i class="fas fa-folder-open"></i>
+                                لا توجد تقارير مرفوعة حالياً
+                            </div>
+                        </td>
+                    </tr>`;
                 return;
             }
 
-            list.innerHTML = reports.map(r => `
+            list.innerHTML = reports.map((r, index) => `
                 <tr>
-                    <td style="font-weight: 700;"><i class="far fa-file-pdf" style="color: #ef4444; margin-left: 10px;"></i> ${r.name}</td>
+                    <td style="font-weight: 700;">
+                        <i class="far fa-file-pdf" style="color: #ef4444; margin-left: 10px;"></i>
+                        ${r.name}
+                    </td>
                     <td>${r.date}</td>
                     <td>
-                        <a href="${r.url}" target="_blank" class="btn-view"><i class="fas fa-eye"></i> معاينة</a>
-                        <a href="${r.url}" download class="btn-download"><i class="fas fa-download"></i> تحميل</a>
+                        <a href="${r.url || '#'}" target="_blank" class="btn-view">
+                            <i class="fas fa-eye"></i> معاينة
+                        </a>
+                        <a href="${r.url || '#'}" download="${r.name}" class="btn-download">
+                            <i class="fas fa-download"></i> تحميل
+                        </a>
+                        <button class="btn-delete" onclick="deleteReport(${index})">
+                            <i class="fas fa-trash"></i> حذف
+                        </button>
                     </td>
                 </tr>
             `).join('');
         }
+
+        // ---- Delete a report ----
+        function deleteReport(index) {
+            const reports = loadReportsFromStorage();
+            const name = reports[index]?.name || 'التقرير';
+            reports.splice(index, 1);
+            saveReportsToStorage(reports);
+            renderReports(reports);
+            showToast(`تم حذف "${name}" بنجاح`);
+        }
+
+        // ---- Load on start: try server first, fall back to localStorage ----
+        async function loadReports() {
+            try {
+                const response = await fetch('/api/reports');
+                if (response.ok) {
+                    const serverReports = await response.json();
+                    // Merge with local data (prefer server)
+                    const localReports = loadReportsFromStorage();
+                    const merged = mergeReports(serverReports, localReports);
+                    saveReportsToStorage(merged);
+                    renderReports(merged);
+                    return;
+                }
+            } catch(e) {
+                // Server not available - use localStorage
+            }
+            // Fallback: render from localStorage
+            const localReports = loadReportsFromStorage();
+            renderReports(localReports);
+        }
+
+        function mergeReports(serverList, localList) {
+            const names = new Set(serverList.map(r => r.name));
+            const extras = localList.filter(r => !names.has(r.name));
+            return [...serverList, ...extras];
+        }
+
+        // ---- File selection display ----
+        document.getElementById('fileInput').addEventListener('change', function() {
+            const label = document.getElementById('fileLabel');
+            if (this.files.length > 0) {
+                label.textContent = `✔ ${this.files[0].name}`;
+            } else {
+                label.textContent = 'اضغط هنا لاختيار الملف';
+            }
+        });
+
+        // ---- Handle Upload (with local persistence fallback) ----
+        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files.length) return;
+
+            const file = fileInput.files[0];
+            const formData = new FormData(this);
+
+            let uploaded = false;
+
+            // Try server upload
+            try {
+                const resp = await fetch('/upload-report', { method: 'POST', body: formData });
+                if (resp.ok) {
+                    uploaded = true;
+                    document.getElementById('uploadModal').style.display = 'none';
+                    fileInput.value = '';
+                    document.getElementById('fileLabel').textContent = 'اضغط هنا لاختيار الملف';
+                    await loadReports();
+                    showToast('✔ تم رفع التقرير بنجاح');
+                    return;
+                }
+            } catch(err) {
+                // Server not available
+            }
+
+            // Fallback: save to localStorage with object URL
+            const objectURL = URL.createObjectURL(file);
+            const newReport = {
+                name: file.name,
+                date: formatDateTime(),
+                url: objectURL,
+                size: file.size
+            };
+
+            const reports = loadReportsFromStorage();
+            // Avoid duplicate names
+            const exists = reports.findIndex(r => r.name === file.name);
+            if (exists >= 0) {
+                reports[exists] = newReport;
+            } else {
+                reports.push(newReport);
+            }
+            saveReportsToStorage(reports);
+            renderReports(reports);
+
+            document.getElementById('uploadModal').style.display = 'none';
+            fileInput.value = '';
+            document.getElementById('fileLabel').textContent = 'اضغط هنا لاختيار الملف';
+            showToast('✔ تم حفظ التقرير محلياً بنجاح');
+        });
+
+        // ---- Close modal on outside click ----
+        document.getElementById('uploadModal').addEventListener('click', function(e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+
+        // ---- Init ----
         loadReports();
     </script>
 </body>

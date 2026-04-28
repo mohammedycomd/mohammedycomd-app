@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 3000;
 const ADMIN_USER  = process.env.ADMIN_USER  || "admin";
 const ADMIN_PASS  = process.env.ADMIN_PASS  || "admin123";
 const JWT_SECRET  = process.env.JWT_SECRET  || "mohammedycomd-jwt-2026-secure";
-const MONGODB_URI = process.env.MONGODB_URI || "";
+const MONGODB_URI = process.env.MONGODB_URI || "mongodb+srv://anasdwihan_db_user:379229mohd@cluster0.i5d2ov8.mongodb.net/ycomd?retryWrites=true&w=majority&appName=Cluster0";
 
 // ── MONGODB SETUP ─────────────────────────────────────────
 let gfsBucket   = null;

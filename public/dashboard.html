@@ -304,10 +304,9 @@
 
     <script>
         // ============================================================
-        // DATA PERSISTENCE LAYER - localStorage based
+        // PERSISTENT STORAGE - Server (MongoDB GridFS) is the source
+        // of truth. No localStorage used for file data.
         // ============================================================
-        const STORAGE_KEY = 'ycomd_reports_data';
-        const UPLOAD_TIME_KEY = 'ycomd_last_upload';
 
         // ---- Multi-file upload state ----
         let selectedFiles = [];
@@ -390,10 +389,10 @@
         async function startMultiUpload() {
             if (selectedFiles.length === 0) return;
             const progressWrap = document.getElementById('uploadProgress');
-            const progressBar = document.getElementById('progressBar');
+            const progressBar  = document.getElementById('progressBar');
             const progressText = document.getElementById('progressText');
-            const statusEl = document.getElementById('uploadStatus');
-            const btn = document.getElementById('startUploadBtn');
+            const statusEl     = document.getElementById('uploadStatus');
+            const btn          = document.getElementById('startUploadBtn');
 
             progressWrap.style.display = 'block';
             btn.disabled = true;
@@ -408,214 +407,131 @@
                 fd.append('reports', file);
                 try {
                     const resp = await fetch('/upload-report', {
-                        method: 'POST',
+                        method : 'POST',
                         headers: { 'X-Requested-With': 'XMLHttpRequest' },
-                        body: fd
+                        body   : fd
                     });
-                    if (resp.ok) { results.ok.push(file.name); }
-                    else { results.fail.push(file.name); }
+                    if (resp.ok) results.ok.push(file.name);
+                    else results.fail.push(file.name);
                 } catch { results.fail.push(file.name); }
 
                 done++;
                 const pct = Math.round((done / total) * 100);
-                progressBar.style.width = pct + '%';
+                progressBar.style.width  = pct + '%';
                 progressText.textContent = pct + '%';
             }
-
-            // Also save to localStorage as backup
-            const stored = loadReportsFromStorage();
-            selectedFiles.forEach(f => {
-                const url = URL.createObjectURL(f);
-                const exists = stored.findIndex(r => r.name === f.name);
-                const entry = { name: f.name, date: formatDateTime(), url, size: f.size };
-                if (exists >= 0) stored[exists] = entry; else stored.push(entry);
-            });
-            saveReportsToStorage(stored);
 
             statusEl.textContent = results.fail.length === 0
                 ? `✅ تم رفع ${results.ok.length} ملف بنجاح`
                 : `⚠️ نجح: ${results.ok.length} | فشل: ${results.fail.length}`;
 
-            setTimeout(() => {
+            setTimeout(async () => {
                 closeUploadModal();
-                loadReports();
+                await loadReports();
                 showToast(`✔ تم رفع ${results.ok.length} ملف بنجاح`);
             }, 1500);
         }
 
-        function saveReportsToStorage(reports) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(reports));
-            localStorage.setItem(UPLOAD_TIME_KEY, new Date().toLocaleString('ar-EG'));
-        }
-
-        function loadReportsFromStorage() {
-            const raw = localStorage.getItem(STORAGE_KEY);
-            return raw ? JSON.parse(raw) : [];
-        }
-
+        // ---- Toast notification ----
         function showToast(message) {
             const toast = document.getElementById('toast');
             document.getElementById('toastMsg').textContent = message;
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            setTimeout(() => toast.classList.remove('show'), 3500);
         }
 
-        function formatDateTime() {
-            return new Date().toLocaleString('ar-EG', {
-                year: 'numeric', month: 'long', day: 'numeric',
-                hour: '2-digit', minute: '2-digit'
-            });
+        // ---- File icon helper ----
+        function getFileIcon(name) {
+            const ext = (name || '').split('.').pop().toLowerCase();
+            const map = { pdf:'fa-file-pdf', doc:'fa-file-word', docx:'fa-file-word',
+                          xls:'fa-file-excel', xlsx:'fa-file-excel',
+                          ppt:'fa-file-powerpoint', pptx:'fa-file-powerpoint',
+                          zip:'fa-file-archive', txt:'fa-file-alt' };
+            return map[ext] || 'fa-file';
         }
 
-        // ---- Render Reports Table ----
+        function fmtSize(b) {
+            if (!b) return '-';
+            return b > 1048576 ? (b/1048576).toFixed(1)+' MB' : (b/1024).toFixed(0)+' KB';
+        }
+
+        // ---- Render reports table (SERVER data only) ----
         function renderReports(reports) {
-            const list = document.getElementById('reports-list');
-            const countEl = document.getElementById('report-count');
-            const lastUpdateEl = document.getElementById('last-update');
+            const list      = document.getElementById('reports-list');
+            const countEl   = document.getElementById('report-count');
+            const updateEl  = document.getElementById('last-update');
 
             countEl.innerText = reports.length;
-
-            const savedTime = localStorage.getItem(UPLOAD_TIME_KEY);
-            if (savedTime) lastUpdateEl.innerText = savedTime;
+            if (reports.length > 0) {
+                updateEl.innerText = reports[0].date || 'نشط الآن';
+            }
 
             if (reports.length === 0) {
-                list.innerHTML = `
-                    <tr>
-                        <td colspan="3">
-                            <div class="empty-state">
-                                <i class="fas fa-folder-open"></i>
-                                لا توجد تقارير مرفوعة حالياً
-                            </div>
-                        </td>
-                    </tr>`;
+                list.innerHTML = `<tr><td colspan="3">
+                    <div class="empty-state">
+                        <i class="fas fa-folder-open"></i>
+                        لا توجد تقارير مرفوعة حالياً
+                    </div></td></tr>`;
                 return;
             }
 
-            list.innerHTML = reports.map((r, index) => `
+            list.innerHTML = reports.map(r => `
                 <tr>
-                    <td style="font-weight: 700;">
-                        <i class="far fa-file-pdf" style="color: #ef4444; margin-left: 10px;"></i>
+                    <td style="font-weight:700;">
+                        <i class="fas ${getFileIcon(r.name)}" style="color:#ef4444;margin-left:10px;"></i>
                         ${r.name}
+                        <small style="color:#94a3b8;font-weight:400;"> (${fmtSize(r.size)})</small>
                     </td>
                     <td>${r.date}</td>
                     <td>
-                        <a href="${r.url || '#'}" target="_blank" class="btn-view">
+                        <a href="${r.url}" target="_blank" class="btn-view">
                             <i class="fas fa-eye"></i> معاينة
                         </a>
-                        <a href="${r.url || '#'}" download="${r.name}" class="btn-download">
+                        <a href="${r.url}" download="${r.name}" class="btn-download">
                             <i class="fas fa-download"></i> تحميل
                         </a>
-                        <button class="btn-delete" onclick="deleteReport(${index})">
+                        <button class="btn-delete" onclick="deleteReport('${r.id || r.storedName || r.name}','${r.name.replace(/'/g,\')}')">
                             <i class="fas fa-trash"></i> حذف
                         </button>
                     </td>
-                </tr>
-            `).join('');
+                </tr>`).join('');
         }
 
-        // ---- Delete a report ----
-        function deleteReport(index) {
-            const reports = loadReportsFromStorage();
-            const name = reports[index]?.name || 'التقرير';
-            reports.splice(index, 1);
-            saveReportsToStorage(reports);
-            renderReports(reports);
-            showToast(`تم حذف "${name}" بنجاح`);
-        }
-
-        // ---- Load on start: try server first, fall back to localStorage ----
-        async function loadReports() {
+        // ---- Delete report via server API ----
+        async function deleteReport(id, name) {
+            if (!confirm(`هل تريد حذف "${name}"؟`)) return;
             try {
-                const response = await fetch('/api/reports');
-                if (response.ok) {
-                    const serverReports = await response.json();
-                    // Merge with local data (prefer server)
-                    const localReports = loadReportsFromStorage();
-                    const merged = mergeReports(serverReports, localReports);
-                    saveReportsToStorage(merged);
-                    renderReports(merged);
-                    return;
-                }
-            } catch(e) {
-                // Server not available - use localStorage
-            }
-            // Fallback: render from localStorage
-            const localReports = loadReportsFromStorage();
-            renderReports(localReports);
-        }
-
-        function mergeReports(serverList, localList) {
-            const names = new Set(serverList.map(r => r.name));
-            const extras = localList.filter(r => !names.has(r.name));
-            return [...serverList, ...extras];
-        }
-
-        // ---- File selection display ----
-        document.getElementById('fileInput').addEventListener('change', function() {
-            const label = document.getElementById('fileLabel');
-            if (this.files.length > 0) {
-                label.textContent = `✔ ${this.files[0].name}`;
-            } else {
-                label.textContent = 'اضغط هنا لاختيار الملف';
-            }
-        });
-
-        // ---- Handle Upload (with local persistence fallback) ----
-        document.getElementById('uploadForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-            const fileInput = document.getElementById('fileInput');
-            if (!fileInput.files.length) return;
-
-            const file = fileInput.files[0];
-            const formData = new FormData(this);
-
-            let uploaded = false;
-
-            // Try server upload
-            try {
-                const resp = await fetch('/upload-report', { method: 'POST', body: formData });
+                const resp = await fetch(`/api/reports/${encodeURIComponent(id)}`, { method: 'DELETE' });
                 if (resp.ok) {
-                    uploaded = true;
-                    document.getElementById('uploadModal').style.display = 'none';
-                    fileInput.value = '';
-                    document.getElementById('fileLabel').textContent = 'اضغط هنا لاختيار الملف';
+                    showToast(`تم حذف "${name}" بنجاح`);
                     await loadReports();
-                    showToast('✔ تم رفع التقرير بنجاح');
+                } else {
+                    showToast('⚠️ فشل الحذف، حاول مجدداً');
+                }
+            } catch {
+                showToast('⚠️ تعذّر الاتصال بالسيرفر');
+            }
+        }
+
+        // ---- Load reports from server ----
+        async function loadReports() {
+            const list = document.getElementById('reports-list');
+            list.innerHTML = `<tr><td colspan="3" style="text-align:center;padding:2rem;color:#94a3b8;">
+                <i class="fas fa-spinner fa-spin" style="font-size:1.5rem;"></i><br>جارٍ التحميل...</td></tr>`;
+            try {
+                const resp = await fetch('/api/reports');
+                if (resp.ok) {
+                    const reports = await resp.json();
+                    renderReports(reports);
                     return;
                 }
-            } catch(err) {
-                // Server not available
-            }
-
-            // Fallback: save to localStorage with object URL
-            const objectURL = URL.createObjectURL(file);
-            const newReport = {
-                name: file.name,
-                date: formatDateTime(),
-                url: objectURL,
-                size: file.size
-            };
-
-            const reports = loadReportsFromStorage();
-            // Avoid duplicate names
-            const exists = reports.findIndex(r => r.name === file.name);
-            if (exists >= 0) {
-                reports[exists] = newReport;
-            } else {
-                reports.push(newReport);
-            }
-            saveReportsToStorage(reports);
-            renderReports(reports);
-
-            document.getElementById('uploadModal').style.display = 'none';
-            fileInput.value = '';
-            document.getElementById('fileLabel').textContent = 'اضغط هنا لاختيار الملف';
-            showToast('✔ تم حفظ التقرير محلياً بنجاح');
-        });
+            } catch(e) { console.warn('Server error:', e); }
+            renderReports([]);
+        }
 
         // ---- Close modal on outside click ----
         document.getElementById('uploadModal').addEventListener('click', function(e) {
-            if (e.target === this) this.style.display = 'none';
+            if (e.target === this) closeUploadModal();
         });
 
         // ---- Init ----

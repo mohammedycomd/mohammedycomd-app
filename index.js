@@ -89,11 +89,7 @@ const isAuthenticated = (req, res, next) => {
 
 // Root → PRIVATE: always redirect to login unless authenticated
 app.get('/', (req, res) => {
-    const token = req.cookies.authToken;
-    if (token) {
-        try { jwt.verify(token, JWT_SECRET); return res.redirect('/dashboard.html'); } catch {}
-    }
-    res.redirect('/login.html');
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.get('/login.html', (req, res) => {
@@ -105,7 +101,8 @@ app.get('/login.html', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-    const { username, password } = req.body;
+    const { username, admin_pass } = req.body;
+    const password = admin_pass || req.body.password;
     console.log(`Login attempt: user="${username}"`);
     if (username === ADMIN_USER && password === ADMIN_PASS) {
         const token    = jwt.sign({ user: username }, JWT_SECRET, { expiresIn: '7d' });
@@ -127,10 +124,8 @@ app.post('/login', (req, res) => {
 
 app.get('/logout', (req, res) => {
     res.clearCookie('authToken');
-    res.redirect('/login.html');
+    res.redirect('/');
 });
-
-app.get('/index.html', isAuthenticated, (req, res) => res.redirect('/dashboard.html'));
 
 // ── PROTECTED ROUTES ──────────────────────────────────────
 app.get('/dashboard.html', isAuthenticated, (req, res) => {

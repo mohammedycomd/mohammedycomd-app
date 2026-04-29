@@ -60,15 +60,21 @@
                         <h2>تقارير Platts العالمية</h2>
                         <p style="color: var(--text-muted); font-size: 0.9rem;">إدارة وتحميل نشرات السوق اليومية</p>
                     </div>
-                    <button class="btn-primary" onclick="document.getElementById('uploadModal').style.display='block'">
-                        <i class="fas fa-plus"></i> رفع تقرير جديد
-                    </button>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-delete" id="btnDeleteSelected" onclick="deleteSelectedReports()" style="display:none; padding:0.6rem 1rem;">
+                            <i class="fas fa-trash-alt"></i> حذف المحدد
+                        </button>
+                        <button class="btn-primary" onclick="document.getElementById('uploadModal').style.display='block'">
+                            <i class="fas fa-plus"></i> رفع تقرير جديد
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="reports-table-container">
                     <table class="reports-table">
                         <thead>
                             <tr>
+                                <th style="width: 40px;"><input type="checkbox" id="selectAllCb" onclick="toggleAllCheckboxes(this)"></th>
                                 <th>اسم المستند</th>
                                 <th>تاريخ الإصدار</th>
                                 <th>الإجراءات المتاحة</th>
@@ -509,7 +515,7 @@
             }
 
             if (reports.length === 0) {
-                list.innerHTML = `<tr><td colspan="3">
+                list.innerHTML = `<tr><td colspan="4">
                     <div class="empty-state">
                         <i class="fas fa-folder-open"></i>
                         لا توجد تقارير مرفوعة حالياً
@@ -539,7 +545,7 @@
                 const fid = "folder_" + folderIdx;
                 html += `
                 <tr class="folder-header" onclick="toggleFolder('${fid}')" style="background:#f8fafc; cursor:pointer; transition:0.3s;">
-                    <td colspan="3" style="font-weight:700; color:#1e293b;">
+                    <td colspan="4" style="font-weight:700; color:#1e293b;">
                         <i class="fas fa-folder-open" style="color:#fbbf24; margin-left:8px;" id="icon_${fid}"></i> 
                         <span style="direction:ltr; display:inline-block;">${folder}</span>
                         <span style="color:#94a3b8; font-size:0.8rem; margin-right:8px;">(${folders[folder].length} ملفات)</span>
@@ -555,6 +561,7 @@
             const indent = folderId ? `padding-right: 2.5rem;` : ``;
             return `
                 <tr ${cls}>
+                    <td><input type="checkbox" class="report-cb" value="${r.id || r.storedName || r.name}" onchange="updateDeleteBtn()"></td>
                     <td style="font-weight:700; ${indent}">
                         <i class="fas ${getFileIcon(r.shortName)}" style="color:#ef4444;margin-left:10px;"></i>
                         ${r.shortName}
@@ -621,6 +628,59 @@
         document.getElementById('uploadModal').addEventListener('click', function(e) {
             if (e.target === this) closeUploadModal();
         });
+
+        // ---- Bulk delete ----
+        function toggleAllCheckboxes(source) {
+            const checkboxes = document.querySelectorAll('.report-cb');
+            checkboxes.forEach(cb => { cb.checked = source.checked; });
+            updateDeleteBtn();
+        }
+
+        function updateDeleteBtn() {
+            const checked = document.querySelectorAll('.report-cb:checked');
+            const btn = document.getElementById('btnDeleteSelected');
+            if (checked.length > 0) {
+                btn.style.display = 'inline-flex';
+                btn.innerHTML = `<i class="fas fa-trash-alt"></i> حذف المحدد (${checked.length})`;
+            } else {
+                btn.style.display = 'none';
+                const selectAll = document.getElementById('selectAllCb');
+                if (selectAll) selectAll.checked = false;
+            }
+        }
+
+        async function deleteSelectedReports() {
+            const checked = document.querySelectorAll('.report-cb:checked');
+            if (checked.length === 0) return;
+            if (!confirm(`هل أنت متأكد من حذف ${checked.length} ملفات بشكل نهائي؟`)) return;
+
+            const btn = document.getElementById('btnDeleteSelected');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> جارٍ الحذف...`;
+            btn.disabled = true;
+
+            let successCount = 0;
+            let failCount = 0;
+
+            for (const cb of checked) {
+                try {
+                    const resp = await fetch(`/api/reports/${encodeURIComponent(cb.value)}`, { method: 'DELETE' });
+                    if (resp.ok) successCount++;
+                    else failCount++;
+                } catch { failCount++; }
+            }
+
+            if (failCount === 0) {
+                showToast(`تم حذف ${successCount} ملفات بنجاح`);
+            } else {
+                showToast(`⚠️ نجح: ${successCount} | فشل: ${failCount}`);
+            }
+
+            const selectAll = document.getElementById('selectAllCb');
+            if (selectAll) selectAll.checked = false;
+            btn.disabled = false;
+            updateDeleteBtn();
+            await loadReports();
+        }
 
         // ---- Init ----
         loadReports();

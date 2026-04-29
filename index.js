@@ -48,7 +48,8 @@ const FileRecord = mongoose.models.FileRecord || mongoose.model('FileRecord', Fi
 // ── MULTER (memory storage → we stream manually to GridFS) ─
 const upload = multer({
     storage: multer.memoryStorage(),
-    limits : { fileSize: 100 * 1024 * 1024 }  // 100 MB
+    limits : { fileSize: 100 * 1024 * 1024 },  // 100 MB
+    preservePath: true
 });
 
 // Local disk fallback storage
@@ -60,7 +61,7 @@ const localStorage = multer.diskStorage({
     },
     filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/\//g, '_'))
 });
-const uploadLocal = multer({ storage: localStorage, limits: { fileSize: 100 * 1024 * 1024 } });
+const uploadLocal = multer({ storage: localStorage, limits: { fileSize: 100 * 1024 * 1024 }, preservePath: true });
 
 // ── MIDDLEWARE ────────────────────────────────────────────
 app.use(express.urlencoded({ extended: true }));

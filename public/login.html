@@ -405,14 +405,14 @@
                 </label>
                 <div class="field-input-wrapper">
                     <input
-                        type="password"
+                        type="text"
                         id="password"
                         name="admin_pass"
                         class="field-input"
                         placeholder="أدخل كلمة المرور"
                         required
                         autocomplete="off"
-                        style="padding-left: 3rem;"
+                        style="padding-left: 3rem; -webkit-text-security: disc;"
                     >
                     <button type="button" class="toggle-password" onclick="togglePasswordVisibility()" id="toggleBtn">
                         <i class="fas fa-eye" id="eyeIcon"></i>
@@ -436,11 +436,11 @@
         function togglePasswordVisibility() {
             const input = document.getElementById('password');
             const icon = document.getElementById('eyeIcon');
-            if (input.type === 'password') {
-                input.type = 'text';
+            if (input.style.webkitTextSecurity === 'disc') {
+                input.style.webkitTextSecurity = 'none';
                 icon.className = 'fas fa-eye-slash';
             } else {
-                input.type = 'password';
+                input.style.webkitTextSecurity = 'disc';
                 icon.className = 'fas fa-eye';
             }
         }

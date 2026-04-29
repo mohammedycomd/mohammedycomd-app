@@ -490,7 +490,7 @@
                         <a href="${r.url}" download="${r.name}" class="btn-download">
                             <i class="fas fa-download"></i> تحميل
                         </a>
-                        <button class="btn-delete" onclick="deleteReport('${r.id || r.storedName || r.name}','${r.name.replace(/'/g,\')}')">
+                        <button class="btn-delete" onclick="deleteReport('${r.id || r.storedName || r.name}','${r.name.replace(/'/g, "&apos;")}')">
                             <i class="fas fa-trash"></i> حذف
                         </button>
                     </td>

@@ -58,7 +58,7 @@ const localStorage = multer.diskStorage({
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
         cb(null, dir);
     },
-    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
+    filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname.replace(/\//g, '_'))
 });
 const uploadLocal = multer({ storage: localStorage, limits: { fileSize: 100 * 1024 * 1024 } });
 

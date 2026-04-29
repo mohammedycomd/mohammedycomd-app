@@ -315,8 +315,8 @@
             const arr = Array.from(fileList);
             // Merge avoiding duplicates by name+size
             arr.forEach(f => {
-                const fPath = f.webkitRelativePath || f.name;
-                const exists = selectedFiles.find(x => (x.webkitRelativePath || x.name) === fPath && x.size === f.size);
+                const fPath = f.customPath || f.webkitRelativePath || f.name;
+                const exists = selectedFiles.find(x => (x.customPath || x.webkitRelativePath || x.name) === fPath && x.size === f.size);
                 if (!exists) selectedFiles.push(f);
             });
             renderFilesPreview();
@@ -345,7 +345,7 @@
                         <div style="display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.4rem;border-bottom:1px solid #f1f5f9;">
                             <div style="display:flex;align-items:center;gap:8px;min-width:0;">
                                 <i class="fas ${getIcon(f.name)}" style="color:#ef4444;flex-shrink:0;"></i>
-                                <span style="font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px;">${f.webkitRelativePath || f.name}</span>
+                                <span style="font-size:0.82rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:280px;">${f.customPath || f.webkitRelativePath || f.name}</span>
                             </div>
                             <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
                                 <span style="font-size:0.78rem;color:#94a3b8;">${fmtSize(f.size)}</span>
@@ -381,11 +381,51 @@
         const dropZone = document.getElementById('dropZone');
         dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.style.background='rgba(197,160,89,0.08)'; dropZone.style.borderColor='var(--accent)'; });
         dropZone.addEventListener('dragleave', () => { dropZone.style.background='#fafaf8'; });
-        dropZone.addEventListener('drop', e => {
+        dropZone.addEventListener('drop', async e => {
             e.preventDefault();
             dropZone.style.background = '#fafaf8';
-            collectFiles(e.dataTransfer.files);
+            if (e.dataTransfer.items) {
+                const items = Array.from(e.dataTransfer.items);
+                const promises = items.map(item => {
+                    if (item.webkitGetAsEntry) return traverseFileTree(item.webkitGetAsEntry(), "");
+                    return item.kind === 'file' ? [item.getAsFile()] : [];
+                });
+                const nested = await Promise.all(promises);
+                collectFiles(nested.flat().filter(Boolean));
+            } else {
+                collectFiles(e.dataTransfer.files);
+            }
         });
+
+        async function traverseFileTree(item, path) {
+            if (!item) return [];
+            path = path || "";
+            if (item.isFile) {
+                return await new Promise(resolve => {
+                    item.file(file => {
+                        file.customPath = path + file.name;
+                        resolve([file]);
+                    });
+                });
+            } else if (item.isDirectory) {
+                const dirReader = item.createReader();
+                const entries = await new Promise(resolve => {
+                    // Quick read of entries
+                    let allEntries = [];
+                    function read() {
+                        dirReader.readEntries(res => {
+                            if (!res.length) resolve(allEntries);
+                            else { allEntries.push(...res); read(); }
+                        });
+                    }
+                    read();
+                });
+                const promises = entries.map(entry => traverseFileTree(entry, path + item.name + "/"));
+                const nested = await Promise.all(promises);
+                return nested.flat();
+            }
+            return [];
+        }
 
         async function startMultiUpload() {
             if (selectedFiles.length === 0) return;
@@ -403,7 +443,7 @@
             const results = { ok: [], fail: [] };
 
             for (const file of selectedFiles) {
-                const fPath = file.webkitRelativePath || file.name;
+                const fPath = file.customPath || file.webkitRelativePath || file.name;
                 statusEl.textContent = `جارٍ رفع: ${fPath}`;
                 const fd = new FormData();
                 fd.append('reports', file, fPath);

@@ -662,24 +662,29 @@
             const checked = document.querySelectorAll('.report-cb:checked');
             if (checked.length === 0) return;
 
-            showToast(`جاري تجهيز ${checked.length} ملفات للتحميل...`);
-            let delay = 0;
+            showToast(`جاري تجهيز ${checked.length} ملفات كملف مضغوط (ZIP)...`);
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/api/download-zip';
+            
             checked.forEach((cb) => {
-                const url = cb.getAttribute('data-url');
-                const filename = cb.getAttribute('data-filename');
-                if (url) {
-                    setTimeout(() => {
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = filename || 'download';
-                        a.style.display = 'none';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                    }, delay);
-                    delay += 600; // 600ms delay to prevent browser from blocking multiple popups
-                }
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]';
+                input.value = cb.value;
+                form.appendChild(input);
             });
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+            
+            // Uncheck after downloading
+            const selectAll = document.getElementById('selectAllCb');
+            if (selectAll) selectAll.checked = false;
+            checked.forEach(cb => cb.checked = false);
+            updateDeleteBtn();
         }
 
         async function deleteSelectedReports() {

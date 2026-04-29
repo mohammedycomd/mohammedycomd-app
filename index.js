@@ -6,6 +6,7 @@ const jwt          = require('jsonwebtoken');
 const cookieParser = require('cookie-parser');
 const mongoose     = require('mongoose');
 const { GridFSBucket, ObjectId } = require('mongodb');
+const archiver     = require('archiver');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -216,6 +217,61 @@ app.post('/upload-report', isAuthenticated, (req, res) => {
             }
             res.redirect('/dashboard.html');
         });
+    }
+});
+
+// ── DOWNLOAD ZIP ──────────────────────────────────────────
+app.post('/api/download-zip', isAuthenticated, async (req, res) => {
+    try {
+        const { ids } = req.body;
+        let fileIds = [];
+        if (Array.isArray(ids)) fileIds = ids;
+        else if (typeof ids === 'string') fileIds = [ids];
+
+        if (!fileIds || fileIds.length === 0) {
+            return res.status(400).send('No files selected');
+        }
+
+        res.set('Content-Type', 'application/zip');
+        res.set('Content-Disposition', `attachment; filename="YCOMD_Reports_${Date.now()}.zip"`);
+
+        const archive = archiver('zip', { zlib: { level: 9 } });
+
+        archive.on('error', function(err) {
+            console.error('Archiver error:', err);
+            if (!res.headersSent) res.status(500).end();
+        });
+
+        archive.pipe(res);
+
+        for (const id of fileIds) {
+            if (useGridFS) {
+                try {
+                    const record = await FileRecord.findById(id);
+                    if (record && record.gridfsId) {
+                        const stream = gfsBucket.openDownloadStream(record.gridfsId);
+                        archive.append(stream, { name: record.originalName });
+                    }
+                } catch (err) {
+                    console.error("Error appending file to zip:", id, err);
+                }
+            } else {
+                try {
+                    const filePath = path.join(__dirname, 'uploads', id);
+                    if (fs.existsSync(filePath)) {
+                        const originalName = id.substring(id.indexOf('-') + 1);
+                        archive.append(fs.createReadStream(filePath), { name: originalName });
+                    }
+                } catch (err) {
+                    console.error("Error appending file to zip (local):", id, err);
+                }
+            }
+        }
+
+        archive.finalize();
+    } catch (error) {
+        console.error('ZIP Error:', error);
+        if (!res.headersSent) res.status(500).send('Error creating zip');
     }
 });
 
